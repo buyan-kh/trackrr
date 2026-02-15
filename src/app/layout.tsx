@@ -1,18 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, DM_Sans } from "next/font/google";
 import "./globals.css";
-
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const dmSans = DM_Sans({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "TrackMRR — Business Metrics Dashboard",
@@ -27,9 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${plusJakarta.variable} ${dmSans.variable} antialiased`}
-      >
+      <body className="antialiased">
+        <div className="glass-bg" aria-hidden="true">
+          <div className="ambient-blob" />
+        </div>
         {children}
       </body>
     </html>

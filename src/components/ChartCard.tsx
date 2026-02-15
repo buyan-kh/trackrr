@@ -9,11 +9,11 @@ interface ChartCardProps {
 
 export default function ChartCard({ title, children }: ChartCardProps) {
   return (
-    <div className="chart-card">
-      <h3 className="text-sm font-semibold tracking-wide uppercase text-gray-400 mb-4 px-1">
-        {title}
-      </h3>
-      <div className="w-full">{children}</div>
+    <div className="glass-panel chart-card">
+      <h3 className="chart-title">{title}</h3>
+      <div style={{ position: "relative", zIndex: 2, width: "100%" }}>
+        {children}
+      </div>
     </div>
   );
 }

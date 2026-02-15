@@ -1,16 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AreaClosed, LinePath, Bar } from "@visx/shape";
 import { curveMonotoneX } from "@visx/curve";
 import { scaleTime, scaleLinear } from "@visx/scale";
 import { LinearGradient } from "@visx/gradient";
-import {
-  withTooltip,
-  TooltipWithBounds,
-  defaultStyles,
-} from "@visx/tooltip";
-import { WithTooltipProvidedProps } from "@visx/tooltip/lib/enhancers/withTooltip";
 import { localPoint } from "@visx/event";
 import { bisector } from "@visx/vendor/d3-array";
 import { ParentSize } from "@visx/responsive";
@@ -20,19 +14,7 @@ const getDate = (d: DataPoint) => new Date(d.date);
 const getValue = (d: DataPoint) => d.value;
 const bisectDate = bisector<DataPoint, Date>((d) => new Date(d.date)).left;
 
-const tooltipStyles = {
-  ...defaultStyles,
-  background: "white",
-  border: "none",
-  borderRadius: "12px",
-  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-  padding: "10px 14px",
-  fontSize: "13px",
-  fontFamily: "'DM Sans', sans-serif",
-  color: "#1a1a2e",
-};
-
-const margin = { top: 20, right: 0, bottom: 0, left: 0 };
+const margin = { top: 40, right: 0, bottom: 0, left: 0 };
 
 interface AreaChartInnerProps {
   data: DataPoint[];
@@ -48,12 +30,11 @@ function AreaChartInner({
   width,
   height,
   prefix = "$",
-  showTooltip,
-  hideTooltip,
-  tooltipData,
-  tooltipTop = 0,
-  tooltipLeft = 0,
-}: AreaChartInnerProps & WithTooltipProvidedProps<DataPoint>) {
+}: AreaChartInnerProps) {
+  const [hovered, setHovered] = useState<DataPoint | null>(null);
+  const [hoverX, setHoverX] = useState(0);
+  const [hoverY, setHoverY] = useState(0);
+
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -98,28 +79,79 @@ function AreaChartInner({
             ? d1
             : d0;
       }
-      showTooltip({
-        tooltipData: d,
-        tooltipLeft: dateScale(getDate(d)),
-        tooltipTop: valueScale(getValue(d)),
-      });
+      setHovered(d);
+      setHoverX(dateScale(getDate(d)));
+      setHoverY(valueScale(getValue(d)));
     },
-    [showTooltip, dateScale, valueScale, data]
+    [dateScale, valueScale, data]
   );
 
   if (width < 10) return null;
 
   const allZero = data.every((d) => d.value === 0);
 
+  const displayValue = hovered
+    ? `${prefix}${getValue(hovered).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      })}`
+    : null;
+
+  const displayDate = hovered
+    ? new Date(hovered.date).toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", width, height }}>
+      {/* Top label — Apple Stocks style */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 4,
+          zIndex: 2,
+          height: margin.top,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          opacity: hovered ? 1 : 0,
+          transition: "opacity 0.15s ease",
+          pointerEvents: "none",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: '"SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+            fontSize: 20,
+            fontWeight: 700,
+            letterSpacing: "-0.03em",
+            color: colors.startColor,
+          }}
+        >
+          {displayValue}
+        </span>
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: "rgba(0,0,0,0.3)",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {displayDate}
+        </span>
+      </div>
+
       <svg width={width} height={height}>
         <LinearGradient
           id={`gradient-${colors.id}`}
           from={colors.startColor}
           to={colors.endColor}
-          fromOpacity={0.4}
-          toOpacity={0.05}
+          fromOpacity={0.3}
+          toOpacity={0.02}
         />
         <LinearGradient
           id={`line-gradient-${colors.id}`}
@@ -133,9 +165,9 @@ function AreaChartInner({
             x2={innerWidth + margin.left}
             y2={innerHeight + margin.top}
             stroke={colors.startColor}
-            strokeWidth={2}
-            strokeOpacity={0.3}
-            strokeDasharray="6,4"
+            strokeWidth={1.5}
+            strokeOpacity={0.25}
+            strokeDasharray="6,5"
           />
         ) : (
           <>
@@ -152,9 +184,10 @@ function AreaChartInner({
               data={data}
               x={(d) => dateScale(getDate(d)) ?? 0}
               y={(d) => valueScale(getValue(d)) ?? 0}
-              strokeWidth={2.5}
+              strokeWidth={2}
               stroke={`url(#line-gradient-${colors.id})`}
               curve={curveMonotoneX}
+              strokeLinecap="round"
             />
           </>
         )}
@@ -167,53 +200,51 @@ function AreaChartInner({
           onTouchStart={handleTooltip}
           onTouchMove={handleTooltip}
           onMouseMove={handleTooltip}
-          onMouseLeave={() => hideTooltip()}
+          onMouseLeave={() => setHovered(null)}
         />
-        {tooltipData && (
+        {hovered && (
           <g>
+            {/* Vertical scrub line */}
+            <line
+              x1={hoverX}
+              y1={margin.top}
+              x2={hoverX}
+              y2={innerHeight + margin.top}
+              stroke={colors.startColor}
+              strokeWidth={1}
+              strokeOpacity={0.15}
+            />
+            {/* Glow */}
             <circle
-              cx={tooltipLeft}
-              cy={tooltipTop}
-              r={5}
+              cx={hoverX}
+              cy={hoverY}
+              r={12}
               fill={colors.startColor}
-              stroke="white"
+              opacity={0.08}
+            />
+            {/* Outer ring */}
+            <circle
+              cx={hoverX}
+              cy={hoverY}
+              r={5.5}
+              fill="white"
+              stroke={colors.startColor}
               strokeWidth={2}
-              style={{
-                filter: `drop-shadow(0 0 6px ${colors.startColor}40)`,
-              }}
+              style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.1))" }}
+            />
+            {/* Inner dot */}
+            <circle
+              cx={hoverX}
+              cy={hoverY}
+              r={2}
+              fill={colors.startColor}
             />
           </g>
         )}
       </svg>
-      {tooltipData && (
-        <TooltipWithBounds
-          key={Math.random()}
-          top={tooltipTop - 40}
-          left={tooltipLeft}
-          style={tooltipStyles}
-        >
-          <div style={{ fontWeight: 600, color: colors.startColor }}>
-            {prefix}
-            {getValue(tooltipData).toLocaleString(undefined, {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 2,
-            })}
-          </div>
-          <div style={{ color: "#999", fontSize: "11px", marginTop: "2px" }}>
-            {new Date(tooltipData.date).toLocaleDateString("en-US", {
-              month: "short",
-              year: "numeric",
-            })}
-          </div>
-        </TooltipWithBounds>
-      )}
     </div>
   );
 }
-
-const AreaChartWithTooltip = withTooltip<AreaChartInnerProps, DataPoint>(
-  AreaChartInner
-);
 
 interface AreaChartProps {
   data: DataPoint[];
@@ -231,7 +262,7 @@ export default function AreaChart({
   return (
     <ParentSize>
       {({ width }) => (
-        <AreaChartWithTooltip
+        <AreaChartInner
           data={data}
           colors={colors}
           width={width}

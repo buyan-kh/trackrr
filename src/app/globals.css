@@ -1,83 +1,323 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-body);
+  --font-sans: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-shadow: rgba(0, 0, 0, 0.04);
+  --glass-blur: 40px;
+  --glass-radius: 24px;
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --text-primary: rgba(0, 0, 0, 0.85);
+  --text-secondary: rgba(0, 0, 0, 0.45);
+  --text-tertiary: rgba(0, 0, 0, 0.3);
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: #ffffff;
-  color: #1a1a2e;
-  font-family: var(--font-body), "DM Sans", system-ui, sans-serif;
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  color: var(--text-primary);
+  background: #f2f0f5;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-.font-display {
-  font-family: var(--font-display), "Plus Jakarta Sans", system-ui, sans-serif;
+/* Ambient background — iOS wallpaper feel */
+.glass-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(145deg, #e8e4f0 0%, #f0eff5 30%, #e6ecf5 55%, #f5f0ed 80%, #eee8f0 100%);
+}
+
+.glass-bg::before,
+.glass-bg::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: ambientFloat 20s ease-in-out infinite;
+}
+
+.glass-bg::before {
+  width: 600px;
+  height: 600px;
+  top: -10%;
+  right: -5%;
+  background: radial-gradient(circle, rgba(180, 140, 255, 0.35) 0%, rgba(120, 180, 255, 0.2) 50%, transparent 70%);
+}
+
+.glass-bg::after {
+  width: 500px;
+  height: 500px;
+  bottom: -5%;
+  left: -5%;
+  background: radial-gradient(circle, rgba(255, 160, 140, 0.3) 0%, rgba(255, 200, 160, 0.15) 50%, transparent 70%);
+  animation-delay: -10s;
+  animation-direction: reverse;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.35;
+  animation: ambientFloat 25s ease-in-out infinite;
+  animation-delay: -5s;
+  width: 400px;
+  height: 400px;
+  top: 40%;
+  left: 30%;
+  background: radial-gradient(circle, rgba(100, 200, 220, 0.4) 0%, rgba(140, 220, 180, 0.15) 50%, transparent 70%);
+}
+
+@keyframes ambientFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-20px, 15px) scale(0.95); }
+  75% { transform: translate(15px, 25px) scale(1.02); }
 }
 
 /* Dashboard container */
 .dashboard-container {
-  max-width: 1120px;
+  position: relative;
+  z-index: 1;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 48px 24px 64px;
-  animation: fadeIn 0.6s ease-out;
+  padding: 52px 20px 80px;
+  animation: containerReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (min-width: 640px) {
   .dashboard-container {
-    padding: 56px 40px 80px;
+    padding: 60px 36px 80px;
   }
 }
 
-/* Metric cards — glass-like iOS style */
-.metric-card {
-  position: relative;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: 20px;
-  padding: 24px 28px;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.02),
-    0 8px 24px rgba(0, 0, 0, 0.03);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-  overflow: hidden;
-}
-
-.metric-card:hover {
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    0 12px 32px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
-}
-
-.metric-accent {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  border-radius: 4px 0 0 4px;
-  opacity: 0.8;
-}
-
-/* Chart cards */
-.chart-card {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: 20px;
-  padding: 24px 24px 16px;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.02),
-    0 8px 24px rgba(0, 0, 0, 0.03);
-}
-
-/* Fade-in animation */
-@keyframes fadeIn {
+@keyframes containerReveal {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px) scale(0.99);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
+}
+
+/* Liquid Glass Panel — core reusable surface */
+.glass-panel {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+  border-radius: var(--glass-radius);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 0 0 0.5px rgba(255, 255, 255, 0.5) inset,
+    0 1px 0 0 rgba(255, 255, 255, 0.7) inset,
+    0 2px 8px rgba(0, 0, 0, 0.03),
+    0 8px 32px rgba(0, 0, 0, 0.05);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel:hover {
+  box-shadow:
+    0 0 0 0.5px rgba(255, 255, 255, 0.6) inset,
+    0 1px 0 0 rgba(255, 255, 255, 0.8) inset,
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    0 16px 48px rgba(0, 0, 0, 0.07);
+}
+
+.metric-card:hover {
+  transform: translateY(-1px) scale(1.005);
+}
+
+/* Specular highlight edge — top-left refraction glow */
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  border-radius: var(--glass-radius) var(--glass-radius) 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+  mask-image: linear-gradient(180deg, black 0%, transparent 60%);
+  -webkit-mask-image: linear-gradient(180deg, black 0%, transparent 60%);
+}
+
+/* Metric Card */
+.metric-card {
+  padding: 22px 24px 20px;
+}
+
+.metric-card .metric-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.metric-label {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.metric-value {
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.metric-change {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.metric-change.positive {
+  color: rgba(36, 138, 61, 0.9);
+  background: rgba(36, 138, 61, 0.08);
+}
+
+.metric-change.negative {
+  color: rgba(215, 58, 73, 0.9);
+  background: rgba(215, 58, 73, 0.08);
+}
+
+.metric-change.neutral {
+  color: var(--text-tertiary);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Chart Card — no hover transform, clip tooltip overflow */
+.chart-card {
+  padding: 24px 20px 16px;
+  overflow: hidden;
+}
+
+.chart-card:hover {
+  transform: none;
+}
+
+.chart-title {
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  padding-left: 4px;
+}
+
+/* Section header */
+.section-label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  padding-left: 4px;
+  margin-bottom: 12px;
+}
+
+/* Header styles */
+.header-title {
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.header-subtitle {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  letter-spacing: -0.01em;
+  margin-top: 4px;
+}
+
+/* Loading state */
+.loading-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid rgba(0, 0, 0, 0.08);
+  border-top-color: rgba(0, 0, 0, 0.35);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Staggered card entrance animation */
+.stagger-1 { animation: cardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.stagger-2 { animation: cardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
+.stagger-3 { animation: cardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+.stagger-4 { animation: cardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both; }
+.stagger-5 { animation: cardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both; }
+.stagger-6 { animation: cardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; }
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Tooltip glass style */
+.glass-tooltip {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(24px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 14px !important;
+  box-shadow:
+    0 0 0 0.5px rgba(255, 255, 255, 0.5) inset,
+    0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  padding: 10px 14px !important;
 }
