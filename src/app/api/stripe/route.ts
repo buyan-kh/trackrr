@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateMRRData, generateARRData, getCurrentMRR, getCurrentARR } from "@/lib/mock-data";
+import { generateMRRData, generateARRData } from "@/lib/mock-data";
 
 export async function GET() {
   const mrrHistory = generateMRRData();
@@ -7,11 +7,11 @@ export async function GET() {
 
   return NextResponse.json({
     mrr: {
-      current: getCurrentMRR(),
+      current: 0,
       history: mrrHistory,
     },
     arr: {
-      current: getCurrentARR(),
+      current: 0,
       history: arrHistory,
     },
   });

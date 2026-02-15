@@ -12,14 +12,9 @@ function generateMonthlyDates(months: number): string[] {
 
 export function generateMRRData(): DataPoint[] {
   const dates = generateMonthlyDates(12);
-  // Mock MRR growth trajectory for a SaaS startup
-  const mrrValues = [
-    1200, 1400, 1850, 2100, 2800, 3350,
-    4100, 4750, 5600, 6200, 7400, 8500,
-  ];
-  return dates.map((date, i) => ({
+  return dates.map((date) => ({
     date,
-    value: mrrValues[i],
+    value: 0,
   }));
 }
 
@@ -47,13 +42,11 @@ export function generatePolymarketData(): DataPoint[] {
 }
 
 export function getCurrentMRR(): number {
-  const data = generateMRRData();
-  return data[data.length - 1].value;
+  return 0;
 }
 
 export function getCurrentARR(): number {
-  const data = generateARRData();
-  return data[data.length - 1].value;
+  return 0;
 }
 
 export function getCurrentPolymarketValue(data: DataPoint[]): number {
