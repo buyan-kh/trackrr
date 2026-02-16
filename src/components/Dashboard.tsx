@@ -125,7 +125,13 @@ export default function Dashboard() {
         </div>
       </div>
       <div className="stagger-6">
-        <ChartCard title="Polymarket Portfolio Value">
+        <ChartCard
+          title="Polymarket Portfolio Value"
+          link={{
+            href: "https://polymarket.com/@0x200bFa9B0C67b7f626832b799C0cBeD7a2323BCC-1771269176504",
+            label: "View on Polymarket →",
+          }}
+        >
           <AreaChart
             data={data.polymarket.history}
             colors={CHART_COLORS.polymarket}
